@@ -47,18 +47,19 @@ flowchart TD
 
 ### 3.1 Sliding Window Log
 - **Mechanism**: Stores timestamps of accepted requests in a double-ended queue (`collections.deque`).
-- **Eviction**: At evaluation time $t$, evict all entries where $\text{timestamp} \le t - \text{window\_seconds}$.
+- **Eviction**: At evaluation time $t$, evict all entries where:
+  $$\text{timestamp} \le t - \text{windowSeconds}$$
 - **Admission**: If $\sum \text{tokens} + \text{requested} \le \text{capacity}$, admit.
 - **Retry-After Calculation**: To admit a new request of size $R$, the system needs to shed $\text{deficit} = \text{current} + R - \text{capacity}$ tokens. We iterate through the oldest entries in the deque until the accumulated shed count $\ge \text{deficit}$. The time when that entry expires is $t_{\text{expire}} = t_{\text{entry}} + \text{window}$, giving:
-  $$\text{Retry-After} = \max(0, t_{\text{expire}} - t)$$
+  $$\text{RetryAfter} = \max(0, t_{\text{expire}} - t)$$
 
 ### 3.2 Token Bucket
 - **Mechanism**: Maintains a float `tokens` and `last_refill_time`. Instead of running an active background timer thread, refill is computed lazily upon each request:
-  $$\Delta t = t - \text{last\_refill\_time}$$
-  $$\text{tokens} = \min(\text{capacity}, \text{tokens} + \Delta t \times \text{refill\_rate})$$
+  $$\Delta t = t - \text{lastRefillTime}$$
+  $$\text{tokens} = \min(\text{capacity}, \text{tokens} + \Delta t \times \text{refillRate})$$
 - **Admission**: If $\text{tokens} \ge \text{requested}$, deduct tokens and allow.
 - **Retry-After Calculation**:
-  $$\text{Retry-After} = \frac{\text{requested} - \text{tokens}}{\text{refill\_rate}}$$
+  $$\text{RetryAfter} = \frac{\text{requested} - \text{tokens}}{\text{refillRate}}$$
 
 ---
 
