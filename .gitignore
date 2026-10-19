@@ -31,3 +31,8 @@ dist/
 Thumbs.db
 Desktop.ini
 image.png
+
+# Media files (large walkthrough videos)
+*.mp4
+*.mov
+*.avi

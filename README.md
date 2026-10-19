@@ -23,7 +23,7 @@ A curated collection of real-world software engineering interview projects—ste
 
 | # | Project | Category | Status | Brief Description |
 |---|---|---|:---:|---|
-| **01** | [**Rate Limiter**](./Proj_01/) | Concurrency / API Design | ✅ **Done** | In-memory multi-tenant rate limiter supporting **Sliding Window Log** and **Token Bucket** strategies with continuous token refills, recovery time calculation, and fine-grained thread-safe locking. |
+| **01** | [**Rate Limiter**](./Proj_01/) [![Video Walkthrough](https://img.shields.io/badge/Video-Google_Drive-4285F4?logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1csICVtpLVmVxx17R0nxo7n9vIs0XbVHP/view?usp=sharing) | Concurrency / API Design | ✅ **Done** | In-memory multi-tenant rate limiter supporting **Sliding Window Log** and **Token Bucket** strategies with continuous token refills, recovery time calculation, and fine-grained thread-safe locking. |
 | **02** | **Comments & Replies** | Data Modeling | ⏳ Queued | Two-level hierarchy (`Post -> Comment -> Reply`), independent auto-incrementing IDs, defensive copy snapshot isolation, and thread safety. |
 | **03** | **URL Shortener Service** | Full Stack / SQLite API | ⏳ Queued | Flask REST API with SQLite persistence, custom and auto-generated short-codes, TTL expiration, hit counters, and concurrent read-modify-write safety. |
 | **04** | **Reservation Service Incident** | Production Debugging | ⏳ Queued | Live booking incident diagnosis: resolving overbooking race conditions, fixing cancellation anomalies, and executing in-place historical DB repairs. |
