@@ -9,10 +9,14 @@
 > [!TIP]
 > **Conceptual Overview & Architecture Breakdown:**  
 > A complete visual and audio deep dive covering multi-tenant rate limiting, sliding window log vs token bucket mechanics, lazy refill arithmetic, and thread safety.
-> 
-> [![Watch Video Walkthrough](https://img.shields.io/badge/▶_Watch_Walkthrough-Google_Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1csICVtpLVmVxx17R0nxo7n9vIs0XbVHP/view?usp=sharing)
-> 
-> *Direct Link:* [https://drive.google.com/file/d/1csICVtpLVmVxx17R0nxo7n9vIs0XbVHP/view?usp=sharing](https://drive.google.com/file/d/1csICVtpLVmVxx17R0nxo7n9vIs0XbVHP/view?usp=sharing)
+
+<div align="center">
+
+[![Watch Deep Dive Video](./video_thumbnail.jpg)](https://drive.google.com/file/d/1csICVtpLVmVxx17R0nxo7n9vIs0XbVHP/view?usp=sharing)
+
+[![Watch on Google Drive](https://img.shields.io/badge/▶_Watch_Walkthrough-Google_Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1csICVtpLVmVxx17R0nxo7n9vIs0XbVHP/view?usp=sharing)
+
+</div>
 
 ---
 
