@@ -1,6 +1,6 @@
 import pytest
-from src.models import RateLimitConfig
-from src.strategies.sliding_window import SlidingWindowStrategy
+from Proj_01.src.models import RateLimitConfig
+from Proj_01.src.strategies.sliding_window import SlidingWindowStrategy
 
 
 def test_sliding_window_basic_admit_and_reject():

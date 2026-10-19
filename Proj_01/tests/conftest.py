@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
-# Add Proj_01/src directory to sys.path
-proj_dir = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(proj_dir))
+# Ensure workspace root is in sys.path
+root_dir = Path(__file__).resolve().parent.parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))

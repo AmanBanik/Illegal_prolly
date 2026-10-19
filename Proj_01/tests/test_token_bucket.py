@@ -1,6 +1,6 @@
 import pytest
-from src.models import RateLimitConfig
-from src.strategies.token_bucket import TokenBucketStrategy
+from Proj_01.src.models import RateLimitConfig
+from Proj_01.src.strategies.token_bucket import TokenBucketStrategy
 
 
 def test_token_bucket_burst_and_refill():

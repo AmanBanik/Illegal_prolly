@@ -1,6 +1,6 @@
 import pytest
-from src.limiter import RateLimiter
-from src.models import RateLimitConfig, StrategyType
+from Proj_01.src.limiter import RateLimiter
+from Proj_01.src.models import RateLimitConfig, StrategyType
 
 
 def test_rate_limiter_tenant_and_resource_isolation():
