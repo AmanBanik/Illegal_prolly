@@ -4,6 +4,22 @@
 
 ---
 
+## 🎥 Video Walkthrough & Deep Dive (NotebookLM)
+
+> [!TIP]
+> **Conceptual Overview & Security Deep Dive:**  
+> A complete visual and audio explanation breaking down the password recovery lifecycle, exact 30-second token expiration mathematics, replay attack mitigation, timezone-aware datetime normalization, and concurrent state persistence.
+
+<div align="center">
+
+[![Watch Deep Dive Video](./video_thumbnail.jpg)](https://drive.google.com/file/d/1IVOQyueKy-K38i3KBWaiMjup2p2lA2vn/view?usp=sharing)
+
+[![Watch on Google Drive](https://img.shields.io/badge/▶_Watch_Walkthrough-Google_Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1IVOQyueKy-K38i3KBWaiMjup2p2lA2vn/view?usp=sharing)
+
+</div>
+
+---
+
 ## 1. Problem Statement & Incident Background
 
 In production identity services (e.g., Auth0, Firebase Auth, Okta), the password recovery workflow is one of the highest-value security surfaces. A vulnerable or buggy recovery service leads directly to account takeovers and system lockouts.
