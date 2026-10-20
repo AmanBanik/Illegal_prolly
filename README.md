@@ -37,7 +37,7 @@ A curated collection of real-world software engineering interview projects—ste
 | **12** | **Movie Recommendation** | Algorithms / Data Processing | ⏳ Queued | Personalization engine with candidate filtering, genre preference weighting, cold-start fallback, and deterministic multi-level tie-breaking. |
 | **13** | **Keyword & User Blocking** | Systems / Content Safety | ⏳ Queued | Content admission gateway with string normalization, substring matching, strike accumulation, auto-blocking, and atomic configuration updates. |
 | **14** | **Private Watchlists** | SQLite / Persistence | ⏳ Queued | SQLite-backed watchlist service with user ownership boundaries, duplicate item handling, safe deletion, and multi-instance transaction commits. |
-| **15** | **Password Reset Workflow** | Security / Time Handling | ⏳ Queued | Recovery workflow handling timezone-aware vs naive datetimes, exact 30s validity windows, single-use token consumption, and storage boundaries. |
+| **15** | [**Password Reset Workflow**](./Proj_15/) | Security / Time Handling | ✅ **Done** | Recovery workflow handling timezone-aware vs naive datetimes, exact 30s validity windows, single-use token consumption, and storage boundaries. |
 
 ---
 
