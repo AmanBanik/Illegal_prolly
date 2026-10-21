@@ -4,6 +4,22 @@
 
 ---
 
+## 🎥 Video Walkthrough & Deep Dive (NotebookLM)
+
+> [!TIP]
+> **Conceptual Overview & Architecture Breakdown:**  
+> A complete visual and audio explanation covering batch image processing pipelines, FIFO admission, thread pool task scheduling, bounded memory budgeting with condition variables, failure isolation, and deterministic result reordering.
+
+<div align="center">
+
+[![Watch Deep Dive Video](./video_thumbnail.jpg)](https://drive.google.com/file/d/1YP1BlzgUOpqJDH5-FgT7lzwo6eWZ9GmY/view?usp=sharing)
+
+[![Watch on Google Drive](https://img.shields.io/badge/▶_Watch_Walkthrough-Google_Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1YP1BlzgUOpqJDH5-FgT7lzwo6eWZ9GmY/view?usp=sharing)
+
+</div>
+
+---
+
 ## 1. Problem Statement & Context
 
 In high-scale media processing architectures (e.g., Cloudinary, Imgix, Netflix encoding pipelines), thousands of heterogeneous image transformation jobs (resizing, color conversions, watermarking, filters) must be executed continuously without exhausting server resources or crashing under corrupted payloads.
