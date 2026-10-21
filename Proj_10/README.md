@@ -12,7 +12,9 @@
 
 <div align="center">
 
-*Video walkthrough link and architectural blueprint thumbnail will be available shortly.*
+[![Watch Deep Dive Video](./video_thumbnail.jpg)](https://drive.google.com/file/d/1XEIIKV9zv6iWv-eYu1K8vHfpT6bwCO8E/view?usp=sharing)
+
+[![Watch on Google Drive](https://img.shields.io/badge/▶_Watch_Walkthrough-Google_Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1XEIIKV9zv6iWv-eYu1K8vHfpT6bwCO8E/view?usp=sharing)
 
 </div>
 
