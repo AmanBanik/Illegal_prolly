@@ -111,14 +111,6 @@ class UrlShortenerService:
         if now.tzinfo is None:
             now = now.replace(tzinfo=timezone.utc)
 
-        # Handle custom code vs auto-generation
-        if request.custom_code:
-            short_code = self.validate_custom_code(request.custom_code)
-            if self._repo.code_exists(short_code):
-                raise CodeAlreadyExistsError(f"Short code '{short_code}' is already in use")
-        else:
-            short_code = self._generate_unique_code()
-
         # Handle TTL
         expires_at = None
         if request.ttl_seconds is not None:
@@ -126,18 +118,44 @@ class UrlShortenerService:
                 raise ValidationError("ttl_seconds must be a positive integer")
             expires_at = now + timedelta(seconds=request.ttl_seconds)
 
-        record = LinkRecord(
-            short_code=short_code,
-            original_url=valid_url,
-            user_id=user_id,
-            created_at=now,
-            expires_at=expires_at,
-            hit_count=0,
-            is_deleted=False,
-        )
-        self._repo.save_link(record)
+        # Handle custom code vs auto-generation
+        if request.custom_code:
+            short_code = self.validate_custom_code(request.custom_code)
+            if self._repo.code_exists(short_code):
+                raise CodeAlreadyExistsError(f"Short code '{short_code}' is already in use")
 
-        return self._record_to_metadata(record, base_url, now)
+            record = LinkRecord(
+                short_code=short_code,
+                original_url=valid_url,
+                user_id=user_id,
+                created_at=now,
+                expires_at=expires_at,
+                hit_count=0,
+                is_deleted=False,
+            )
+            self._repo.save_link(record)
+            return self._record_to_metadata(record, base_url, now)
+        else:
+            for _ in range(self._max_retries):
+                short_code = self._generate_unique_code()
+                record = LinkRecord(
+                    short_code=short_code,
+                    original_url=valid_url,
+                    user_id=user_id,
+                    created_at=now,
+                    expires_at=expires_at,
+                    hit_count=0,
+                    is_deleted=False,
+                )
+                try:
+                    self._repo.save_link(record)
+                    return self._record_to_metadata(record, base_url, now)
+                except CodeAlreadyExistsError:
+                    continue
+
+            raise CollisionExhaustionError(
+                f"Failed to generate unique short code after {self._max_retries} attempts"
+            )
 
     def get_destination_and_record_hit(
         self,

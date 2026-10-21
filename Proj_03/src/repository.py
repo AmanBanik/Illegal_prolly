@@ -2,6 +2,7 @@ import sqlite3
 import threading
 from datetime import datetime, timezone
 from typing import Optional
+from .exceptions import CodeAlreadyExistsError
 from .models import AggregateStats, LinkRecord
 
 
@@ -65,21 +66,24 @@ class LinkRepository:
         """Inserts a new link record into the database."""
         with self._lock:
             cursor = self._conn.cursor()
-            cursor.execute(
-                """
-                INSERT INTO links (short_code, original_url, user_id, created_at, expires_at, hit_count, is_deleted)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    record.short_code,
-                    record.original_url,
-                    record.user_id,
-                    record.created_at.isoformat(),
-                    record.expires_at.isoformat() if record.expires_at else None,
-                    record.hit_count,
-                    1 if record.is_deleted else 0,
-                ),
-            )
+            try:
+                cursor.execute(
+                    """
+                    INSERT INTO links (short_code, original_url, user_id, created_at, expires_at, hit_count, is_deleted)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        record.short_code,
+                        record.original_url,
+                        record.user_id,
+                        record.created_at.isoformat(),
+                        record.expires_at.isoformat() if record.expires_at else None,
+                        record.hit_count,
+                        1 if record.is_deleted else 0,
+                    ),
+                )
+            except sqlite3.IntegrityError as e:
+                raise CodeAlreadyExistsError(f"Short code '{record.short_code}' is already in use") from e
 
     def get_by_code(self, short_code: str) -> Optional[LinkRecord]:
         """Fetches link by short_code."""
