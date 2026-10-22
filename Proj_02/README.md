@@ -8,11 +8,13 @@
 
 > [!TIP]
 > **Conceptual Overview & Architecture Breakdown:**  
-> A complete visual and audio deep dive covering the two-level discussion hierarchy (Post -> Comment -> Reply), independent auto-incrementing ID sequences, post state isolation, defensive copy snapshot isolation, and reentrant lock thread safety.
+> A complete visual and audio deep dive covering the two-level discussion hierarchy (`Post -> Comment -> Reply`), independent auto-incrementing ID sequences, post state isolation, defensive copy snapshot isolation, reentrant lock thread safety, and edge-case mitigations.
 
 <div align="center">
 
-*Video walkthrough link and architectural blueprint thumbnail will be available shortly.*
+[![Watch Deep Dive Video](./video_thumbnail.jpg)](https://drive.google.com/file/d/1alYAw-82A4aL1VaW2gQxndwNYka4aTOK/view?usp=sharing)
+
+[![Watch on Google Drive](https://img.shields.io/badge/▶_Watch_Walkthrough-Google_Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1alYAw-82A4aL1VaW2gQxndwNYka4aTOK/view?usp=sharing)
 
 </div>
 
@@ -23,27 +25,28 @@
 In production discussion platforms (such as GitHub PR Reviews, YouTube Comments, Instagram, and Reddit), comment systems represent a fundamental systems trade-off between **hierarchical depth** and **query latency**:
 
 ```
-Arbitrary Recursive N-ary Trees (e.g., HackerNews):
+Arbitrary Recursive N-ary Trees (e.g., HackerNews, Reddit):
 Post ──> Comment ──> Reply ──> Sub-Reply ──> Sub-Sub-Reply ──> ...
-(Requires recursive traversal O(N), unbounded UI nesting, complex recursive CTE queries)
+(Requires recursive tree traversal O(N), unbounded UI nesting, complex recursive CTE queries)
 
 Strict Two-Level Hierarchy (e.g., YouTube, Instagram, GitHub PR Reviews):
 Post ──> Comment (Level 1) ──> Reply (Level 2 [Terminal Leaf])
 (Constant lookup O(1), predictable flat rendering, bounded operational complexity)
 ```
 
-The **Comments & Replies Discussion Service** implements an in-memory, thread-safe discussion engine strictly constrained to a **two-level discussion topology**:
+The **Comments & Replies Discussion Service** implements an enterprise-grade, in-memory, thread-safe discussion engine strictly constrained to a **two-level discussion topology**:
 $$\text{Post} \longrightarrow \text{Comment} \longrightarrow \text{Reply}$$
 
 ### Core Requirements
 1. **Adding Comments:** Comments belong to a post (`post_id`). Each comment receives an auto-incrementing ID.
 2. **Adding Replies:** Replies belong to a parent comment (`comment_id`). Each reply receives an independent auto-incrementing ID.
-3. **Strict Two-Level Hierarchy:** Discussions are strictly capped at two levels: `Post -> Comment -> Reply`. Replies cannot have replies; any attempt to reply to a reply is rejected.
+3. **Strict Two-Level Hierarchy:** Discussions are strictly capped at two levels: `Post -> Comment -> Reply`. Replies cannot have replies; any attempt to reply to a reply is intercepted and rejected with an `InvalidHierarchyError`.
 4. **Independent Auto-Incrementing IDs:** Comments and replies generate independent sequential integer IDs ($1, 2, 3 \dots$), mirroring relational database tables (`comments.id SERIAL`, `replies.id SERIAL`). Adding a comment does not advance the reply sequence, and adding a reply does not advance the comment sequence.
 5. **State Isolation Across Posts:** Comments belonging to distinct posts remain strictly partitioned; no data leakage or cross-post pollution can occur.
 6. **Chronological Insertion Order:** Preserves exact creation ordering independently of system clock shifts or timezone adjustments.
 7. **Snapshot / Defensive Copy Mutation Safety:** Callers receive isolated deep copies (`copy.deepcopy`). External mutations, list truncations, or field alterations have zero effect on internal service memory.
 8. **Input & Type Validation:** Blocks Python's boolean inheritance trap (`isinstance(True, int) is True`), empty strings, whitespace-only strings, and negative IDs.
+9. **REST API Gateway:** Exposes a clean, RESTful Flask interface with standardized JSON serialization, HTTP status codes (`201 Created`, `200 OK`, `400 Bad Request`, `404 Not Found`), and error handling.
 
 ---
 
@@ -51,23 +54,26 @@ $$\text{Post} \longrightarrow \text{Comment} \longrightarrow \text{Reply}$$
 
 ```mermaid
 flowchart TD
-    Client["Client / API Request"] --> Gateway["CommentService / Flask App"]
+    Client["Client / HTTP Request"] --> API["Flask REST Controller: app.py"]
+    API --> Svc["CommentService: service.py"]
     
-    Gateway --> Lock["Acquire threading.RLock()"]
-    
-    subgraph Storage ["Thread-Safe In-Memory Storage"]
-        Lock --> Partitions["_post_comments: Dict[post_id, List[Comment]]"]
-        Lock --> CommentIndex["_comments_by_id: Dict[int, Comment]"]
-        Lock --> ReplyIndex["_replies_by_id: Dict[int, Reply]"]
+    subgraph LockBoundary ["Thread Synchronization Boundary"]
+        Svc --> Lock["Acquire threading.RLock()"]
+        
+        subgraph Storage ["Thread-Safe In-Memory Stores"]
+            Lock --> Partitions["_post_comments: Dict[post_id, List[Comment]]"]
+            Lock --> CommentIdx["_comments_by_id: Dict[int, Comment]"]
+            Lock --> ReplyIdx["_replies_by_id: Dict[int, Reply]"]
+        end
+        
+        subgraph SequenceRegisters ["Independent Atomic Sequences"]
+            Lock --> SeqC["_comment_id_seq: 1, 2, 3..."]
+            Lock --> SeqR["_reply_id_seq: 1, 2, 3..."]
+        end
     end
     
-    subgraph Sequences ["Independent Monotonic Counters"]
-        Lock --> SeqC["_comment_id_seq: 1, 2, 3..."]
-        Lock --> SeqR["_reply_id_seq: 1, 2, 3..."]
-    end
-    
-    Storage --> Snapshot["Defensive Copy: copy.deepcopy()"]
-    Snapshot --> ClientResponse["Isolated Snapshot Response"]
+    Storage --> DeepCopy["Snapshot Isolation: copy.deepcopy()"]
+    DeepCopy --> Response["Safe Immutable Response to Caller"]
 ```
 
 ### Memory Layout & Object References
@@ -121,7 +127,7 @@ flowchart TD
 
 Let the discussion platform state at discrete mutation step $t$ be represented as the 5-tuple:
 
-$$\mathcal{S}_t = \langle \mathcal{P}_t, \mathcal{C}_t, \mathcal{R}_t, \sigma_C, \ \sigma_R \rangle$$
+$$\mathcal{S}_t = \langle \mathcal{P}_t, \mathcal{C}_t, \mathcal{R}_t, \sigma_C, \sigma_R \rangle$$
 
 Where:
 - $\mathcal{P}_t: \text{PostID} \to \text{Sequence}[\text{Comment}]$ is the mapping from post identifiers to ordered sequences of comments.
@@ -130,7 +136,7 @@ Where:
 - $\sigma_C \in \mathbb{N}^+$ is the monotonic sequence counter for comment IDs (initialized to $1$).
 - $\sigma_R \in \mathbb{N}^+$ is the monotonic sequence counter for reply IDs (initialized to $1$).
 
-### 1. Independent Sequence Invariant
+### 3.1 Independent Sequence Invariant
 Comment ID generation and reply ID generation operate on completely disjoint sequence registers:
 
 $$\text{id}_{\text{comment}} = \sigma_C, \quad \sigma_C \leftarrow \sigma_C + 1$$
@@ -138,7 +144,7 @@ $$\text{id}_{\text{reply}} = \sigma_R, \quad \sigma_R \leftarrow \sigma_R + 1$$
 
 $$\frac{\partial \sigma_C}{\partial (\text{add\_reply})} = 0, \quad \frac{\partial \sigma_R}{\partial (\text{add\_comment})} = 0$$
 
-### 2. Two-Level Tree Depth Bound
+### 3.2 Two-Level Tree Depth Bound
 Let $G = (V, E)$ be the discussion directed acyclic graph where root nodes are posts:
 
 $$\forall v \in V, \quad \text{depth}(v) \le 2$$
@@ -148,12 +154,12 @@ $$\forall r \in \text{Replies}, \quad \text{deg}^+(r) = 0 \quad (\text{out-degre
 
 $$\text{If } \exists \, \text{edge } (r, u) \text{ where } r \in \text{Replies} \implies \text{VIOLATION} \to \text{Raise } \text{InvalidHierarchyError}$$
 
-### 3. State Isolation Invariant
+### 3.3 State Isolation Invariant
 For any two distinct post identifiers $p_i, p_j$:
 
 $$p_i \ne p_j \implies \mathcal{P}_t[p_i] \cap \mathcal{P}_t[p_j] = \emptyset$$
 
-### 4. Snapshot Defensive Copy Non-Interference
+### 3.4 Snapshot Defensive Copy Non-Interference
 Let $\text{snap} = \text{deepcopy}(\mathcal{C}_t[k])$ be a retrieved snapshot. For any external mutation operator $\mathcal{M}$:
 
 $$\mathcal{M}(\text{snap}) \implies \mathcal{C}_t[k] \equiv \mathcal{C}_t[k]_{(\text{pre-mutation})}$$
@@ -182,23 +188,23 @@ Below is an exact chronological execution trace demonstrating multi-post creatio
 
 ## 5. Thread Safety & Concurrency Model
 
-### 1. Synchronization Primitive: `threading.RLock`
+### 5.1 Synchronization Primitive: `threading.RLock`
 The service protects all read-modify-write critical sections using a reentrant lock:
 
 ```python
 with self._lock:
     comment_id = self._comment_id_seq
     self._comment_id_seq += 1
-    ...
+    # State mutation...
 ```
 
 #### Why Reentrant Lock (`RLock`) over Standard `Lock`?
-- **Internal Composition:** High-level service methods (e.g., `get_thread()`) internally delegate to `get_comments_for_post()`, which in turn may check internal caches. An `RLock` permits the owning thread to re-enter nested synchronized methods without self-deadlock.
+- **Internal Composition:** High-level service methods (e.g., `get_thread()`) internally delegate to `get_comments_for_post()`, which in turn may access internal indices. An `RLock` permits the owning thread to re-enter nested synchronized methods without self-deadlock.
 - **Atomic Sequence Counters:** While a striped or per-post lock structure provides concurrency across independent posts, generating **globally unique auto-incrementing sequential IDs** requires an atomic sequence register. The global `RLock` guarantees atomic ID generation and eliminates complex multi-lock acquisition deadlocks.
 
-### 2. Time & Space Complexity Analysis
+### 5.2 Time & Space Complexity Analysis
 
-| Operation | Method Signature | Time Complexity | Space Complexity | Description |
+| Operation | Method Signature | Time Complexity | Auxiliary Space | Operational Description |
 |---|---|:---:|:---:|---|
 | **Add Comment** | `add_comment(post_id, author_id, content)` | $\mathcal{O}(1)$ | $\mathcal{O}(1)$ | Hash lookup + list append + atomic counter increment. |
 | **Add Reply** | `add_reply(comment_id, author_id, content)` | $\mathcal{O}(1)$ | $\mathcal{O}(1)$ | Direct comment index lookup + reply list append. |
@@ -238,37 +244,71 @@ The service includes a production-ready Flask REST adapter ([`src/app.py`](./src
 
 ---
 
-## 8. Test Suite Directory Structure
+## 8. Verification & Automated Test Suite
 
+Project 02 is backed by **30 automated pytest test cases** spanning data lifecycle, input validation, defensive copy isolation, high-contention concurrency, and REST API integration:
+
+```bash
+# Run Project 02 test suite (30 passing tests)
+python -m pytest Proj_02/tests/ -v
+
+# Run entire repository test suite (173 passing tests)
+python -m pytest -v
 ```
-Proj_02/
-├── 02.png                          # Original LeetCode problem specification capture
-├── README.md                       # Comprehensive architectural blueprint & walkthrough
-├── src/
-│   ├── __init__.py                 # Package exports and domain interface
-│   ├── app.py                      # Flask REST API adapter with standard error handlers
-│   ├── exceptions.py               # Custom domain exceptions (ValidationError, InvalidHierarchyError, etc.)
-│   ├── models.py                   # Comment and Reply dataclasses with defensive copy helpers
-│   └── service.py                  # Thread-safe in-memory discussion engine with RLock
-└── tests/
-    ├── conftest.py                 # Pytest fixtures for isolated service & Flask client instances
-    ├── test_comment_lifecycle.py   # Creation order, multi-post isolation, independent sequences
-    ├── test_concurrency.py         # 25-thread parallel stress tests & mixed traffic race conditions
-    ├── test_defensive_copies.py    # Mutation resistance tests verifying pristine memory state
-    ├── test_flask_api.py           # End-to-end HTTP REST endpoint and status code verification
-    └── test_input_validation.py    # Strict type safety, boolean trap prevention, whitespace checks
-```
+
+### Test Suite Directory Breakdown
+
+- [`test_comment_lifecycle.py`](./tests/test_comment_lifecycle.py):
+  - **Auto-Increment Verification:** Validates independent sequences starting at `1` for both comments and replies without cross-advancement.
+  - **Two-Level Boundary Rejection:** Proves replying to a reply raises `InvalidHierarchyError` across model methods, service methods, and typed parameters.
+  - **Cross-Post Isolation:** Verifies comments and replies on `post_A` never leak into queries for `post_B`.
+  - **Chronological Order:** Validates strict FIFO insertion ordering across multi-comment and multi-reply chains.
+  - **Relationship Validation:** Ensures mismatched `post_id` assertions raise `ValidationError`.
+  - **Nonexistent Resources:** Confirms `CommentNotFoundError` and `ResourceNotFoundError` on unknown IDs, while empty posts return `[]`.
+  - **Platform Statistics & Reset:** Validates aggregate count accuracy and state clearing.
+
+- [`test_input_validation.py`](./tests/test_input_validation.py):
+  - **Boolean Trap Guard:** Confirms `True` and `False` are rejected for numeric IDs and string attributes.
+  - **String Sanitization:** Confirms empty strings `""`, whitespace-only strings (`"   "`, `"\t\n"`), and `None` fail validation.
+  - **Non-Positive & Non-Integer IDs:** Proves IDs $\le 0$, floats (`1.5`), and string representations (`"1"`) are rejected.
+
+- [`test_defensive_copies.py`](./tests/test_defensive_copies.py):
+  - **Attribute Mutation Resistance:** Proves modifying properties on returned `Comment` or `Reply` snapshots leaves internal state untouched.
+  - **Collection Mutation Resistance:** Proves calling `.clear()`, `.pop()`, or `.append()` on returned reply lists has zero effect on subsequent queries.
+  - **Nested Mutation Resistance:** Validates that mutating deep nested reply objects within a retrieved comment does not alter the underlying store.
+
+- [`test_concurrency.py`](./tests/test_concurrency.py):
+  - **Concurrent Comment Additions:** 25 worker threads simultaneously adding comments to a post; asserts 25 unique sequential IDs with zero lost updates.
+  - **Concurrent Reply Additions:** 25 worker threads simultaneously adding replies to a comment; asserts 25 unique sequential reply IDs.
+  - **Multi-Post Parallel Isolation:** 50 worker threads concurrently writing across 10 distinct posts with zero cross-talk.
+  - **Mixed High-Contention Traffic:** 60 interleaved concurrent tasks executing reads, comment writes, reply additions, and metrics requests without deadlocks or race conditions.
+
+- [`test_flask_api.py`](./tests/test_flask_api.py):
+  - **REST Endpoint Coverage:** Full integration testing of `POST /api/posts/<id>/comments`, `POST /api/comments/<id>/replies`, `GET /api/posts/<id>/comments`, and `GET /api/stats`.
+  - **HTTP Status Code Mapping:** Proves valid creations return `201 Created`, valid lookups return `200 OK`, validation/hierarchy failures return `400 Bad Request`, and missing resources return `404 Not Found`.
 
 ---
 
-## 9. Verification & Running Tests
+## 9. Practical Interview Tradeoffs & System Design Talking Points
 
-Run the full automated test suite for Project 02:
+When discussing this design in a senior engineering interview:
 
-```bash
-# Execute Proj_02 test suite (30 passing tests)
-python -m pytest Proj_02/tests -v
+1. **Why Enforce a Two-Level Hierarchy (`Post -> Comment -> Reply`) Over Arbitrary Trees?**
+   - **UI Rendering & Readability:** Infinite nesting causes mobile and web layouts to degrade rapidly ("indentation fatigue"). Two-level structures provide consistent, readable user experiences (similar to YouTube, Instagram, and GitHub pull request line reviews).
+   - **Database Query Complexity:** Querying an arbitrary N-ary tree requires recursive Common Table Expressions (`WITH RECURSIVE` in PostgreSQL) or nested set models, which are expensive to index and query. In contrast, a two-level model can be retrieved using a single indexed query: `SELECT * FROM comments WHERE post_id = ?` followed by `SELECT * FROM replies WHERE comment_id IN (?)`.
+   - **Pagination Feasibility:** Paginating top-level comments is straightforward (`LIMIT 20 OFFSET ?` or keyset pagination `WHERE id > ? LIMIT 20`). With arbitrary nesting, pagination becomes an open research problem requiring complex windowing across multiple tree depths.
 
-# Execute entire workspace suite (173 passing tests)
-python -m pytest -v
-```
+2. **Why Use Independent Auto-Incrementing Sequences for Comments and Replies?**
+   - **Relational Alignment:** In a production database, `comments` and `replies` reside in separate tables, each with its own primary key sequence (`id SERIAL PRIMARY KEY`). Coupling their sequences in an in-memory mock creates artificial dependencies that do not exist in relational storage.
+   - **Sequence Exhaustion & Resource Protection:** An attack that spams replies to a single comment does not exhaust or accelerate the ID space for top-level comments on the platform.
+
+3. **How Does Snapshot Isolation / Defensive Copying Impact Memory & Performance?**
+   - **Correctness vs. Throughput:** In pure Python in-memory services, returning mutable object references creates severe side-channel bugs where external callers can corrupt system state. Using `copy.deepcopy()` guarantees absolute isolation ($\Delta(\text{snapshot}) \not\to \Delta(\text{state})$).
+   - **Production Optimizations:** For massive scale, alternatives to `deepcopy()` include:
+     - **Frozen / Immutable Dataclasses:** Using `dataclass(frozen=True)` or immutable types (`pyrsistent.pmap`, `tuple`).
+     - **Wire-Format Serialization:** Returning serialized JSON strings or bytes directly from memory, which natively provides immutability upon decoding.
+
+4. **Scaling to a Distributed Architecture (Multi-Server Deployment):**
+   - **Locking:** Transition from `threading.RLock()` to distributed lock mechanisms (e.g. Redis `Redlock`) or database-level row locks (`SELECT ... FOR UPDATE`).
+   - **ID Generation:** Replace in-memory integer sequences with distributed Snowflake ID generators (e.g., Twitter Snowflake), UUIDv7 (time-ordered UUIDs), or atomic Redis `INCR` keys.
+   - **Sharding & Partitioning:** Shard discussion clusters by `hash(post_id)`. Since all comments and replies for a given post are scoped strictly to that post, sharding on `post_id` guarantees that all reads and writes for a single thread hit the same database partition with zero cross-node distributed transactions.
