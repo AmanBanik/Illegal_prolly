@@ -36,7 +36,7 @@ A curated collection of real-world software engineering interview projects—ste
 | **11** | **Retry-Safe Issue Service** | Distributed API Design | ⏳ Queued | High-reliability issue tracker featuring idempotency keys for retry safety, optimistic locking (versioning) for concurrent edits, and cursor pagination. |
 | **12** | **Movie Recommendation** | Algorithms / Data Processing | ⏳ Queued | Personalization engine with candidate filtering, genre preference weighting, cold-start fallback, and deterministic multi-level tie-breaking. |
 | **13** | **Keyword & User Blocking** | Systems / Content Safety | ⏳ Queued | Content admission gateway with string normalization, substring matching, strike accumulation, auto-blocking, and atomic configuration updates. |
-| **14** | **Private Watchlists** | SQLite / Persistence | ⏳ Queued | SQLite-backed watchlist service with user ownership boundaries, duplicate item handling, safe deletion, and multi-instance transaction commits. |
+| **14** | [**Private Watchlists**](./Proj_14/) | SQLite / Persistence | ✅ **Done** | SQLite-backed watchlist service with user ownership boundaries, duplicate item handling, safe deletion, and multi-instance transaction commits. |
 | **15** | [**Password Reset Workflow**](./Proj_15/) [![Video Walkthrough](https://img.shields.io/badge/Video-Google_Drive-4285F4?logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1IVOQyueKy-K38i3KBWaiMjup2p2lA2vn/view?usp=sharing) | Security / Time Handling | ✅ **Done** | Recovery workflow handling timezone-aware vs naive datetimes, exact 30s validity windows, single-use token consumption, and storage boundaries. |
 
 ---
