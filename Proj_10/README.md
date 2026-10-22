@@ -189,28 +189,28 @@ python -m pytest Proj_10/tests/ -v
 
 ### Test Suite Directory Structure
 
-- [`test_moderation_checker_failure_isolation.py`](file:///C:/Devfield/leet_project/Proj_10/tests/test_moderation_checker_failure_isolation.py):
+- [`test_moderation_checker_failure_isolation.py`](./tests/test_moderation_checker_failure_isolation.py):
   - Injected checker exceptions (`TimeoutError`, `RuntimeError`) do not consume comment IDs.
   - Checker failures do not increment strike counts.
   - Content edit failures preserve previous comment text.
   - Invalid checker return types raise `CheckerExecutionError` cleanly.
-- [`test_moderation_concurrency.py`](file:///C:/Devfield/leet_project/Proj_10/tests/test_moderation_concurrency.py):
+- [`test_moderation_concurrency.py`](./tests/test_moderation_concurrency.py):
   - 30 concurrent comment creators get unique monotonic sequential IDs without gaps.
   - 20 concurrent violations on one user atomically increment strikes to exactly 3 and block all remaining requests.
   - 15 concurrent edits on a single comment execute with consistent snapshot isolation.
-- [`test_moderation_strikes_and_blocking.py`](file:///C:/Devfield/leet_project/Proj_10/tests/test_moderation_strikes_and_blocking.py):
+- [`test_moderation_strikes_and_blocking.py`](./tests/test_moderation_strikes_and_blocking.py):
   - Strike accumulation and persistence across successful comments.
   - Auto-blocking at threshold with timestamp assignment.
   - Blocked users prevented from editing earlier comments.
   - Administrative unblock and strike resets.
-- [`test_moderation_lifecycle.py`](file:///C:/Devfield/leet_project/Proj_10/tests/test_moderation_lifecycle.py):
+- [`test_moderation_lifecycle.py`](./tests/test_moderation_lifecycle.py):
   - Create, get, edit, list by post, list by user, delete.
-- [`test_moderation_ownership_and_auth.py`](file:///C:/Devfield/leet_project/Proj_10/tests/test_moderation_ownership_and_auth.py):
+- [`test_moderation_ownership_and_auth.py`](./tests/test_moderation_ownership_and_auth.py):
   - Unauthorized edits and deletions raise `UnauthorizedError`.
   - Non-existent comment queries raise `CommentNotFoundError`.
-- [`test_moderation_input_validation.py`](file:///C:/Devfield/leet_project/Proj_10/tests/test_moderation_input_validation.py):
+- [`test_moderation_input_validation.py`](./tests/test_moderation_input_validation.py):
   - Empty strings, whitespace-only strings, nulls, oversized content ($\gt 5000$ chars), and non-positive IDs.
-- [`test_moderation_defensive_copies.py`](file:///C:/Devfield/leet_project/Proj_10/tests/test_moderation_defensive_copies.py):
+- [`test_moderation_defensive_copies.py`](./tests/test_moderation_defensive_copies.py):
   - Mutating retrieved comment or user state objects does not mutate internal service state.
 
 ---

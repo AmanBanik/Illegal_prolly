@@ -224,24 +224,24 @@ python -m pytest Proj_14/tests/ -v
 
 ### Test Suite Directory Structure
 
-- [`test_movie_membership_and_isolation.py`](file:///C:/Devfield/leet_project/Proj_14/tests/test_movie_membership_and_isolation.py):
+- [`test_movie_membership_and_isolation.py`](./tests/test_movie_membership_and_isolation.py):
   - Proves removing a movie from Watchlist A leaves Watchlist B unaffected.
   - Verifies movie metadata retention (`genre`, `year`, `director`).
   - Verifies `MovieNotFoundError` when removing a non-existent movie.
-- [`test_duplicate_movie_handling.py`](file:///C:/Devfield/leet_project/Proj_14/tests/test_duplicate_movie_handling.py):
+- [`test_duplicate_movie_handling.py`](./tests/test_duplicate_movie_handling.py):
   - Verifies `DuplicateMovieError` (HTTP 409) on duplicate movie additions.
   - Verifies the same movie can exist in distinct watchlists.
-- [`test_multi_instance_persistence.py`](file:///C:/Devfield/leet_project/Proj_14/tests/test_multi_instance_persistence.py):
+- [`test_multi_instance_persistence.py`](./tests/test_multi_instance_persistence.py):
   - Multi-instance concurrent read-write verification on real disk SQLite databases.
   - Data integrity verification across complete service shutdown and restart cycles.
-- [`test_ownership_and_authorization.py`](file:///C:/Devfield/leet_project/Proj_14/tests/test_ownership_and_authorization.py):
+- [`test_ownership_and_authorization.py`](./tests/test_ownership_and_authorization.py):
   - Strict private watchlist security: verifies `UnauthorizedError` (HTTP 403) across all endpoints.
-- [`test_watchlist_concurrency.py`](file:///C:/Devfield/leet_project/Proj_14/tests/test_watchlist_concurrency.py):
+- [`test_watchlist_concurrency.py`](./tests/test_watchlist_concurrency.py):
   - 20 concurrent threads adding distinct movies without deadlocks.
   - 15 concurrent threads racing to add the same movie (1 winner, 14 conflicts).
-- [`test_flask_api_endpoints.py`](file:///C:/Devfield/leet_project/Proj_14/tests/test_flask_api_endpoints.py):
+- [`test_flask_api_endpoints.py`](./tests/test_flask_api_endpoints.py):
   - Complete HTTP contract verification: 201, 200, 401, 403, 404, 409.
-- [`test_watchlist_lifecycle.py`](file:///C:/Devfield/leet_project/Proj_14/tests/test_watchlist_lifecycle.py):
+- [`test_watchlist_lifecycle.py`](./tests/test_watchlist_lifecycle.py):
   - Full CRUD lifecycle, renaming, and cascading deletion.
 
 ---

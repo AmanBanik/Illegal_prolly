@@ -163,7 +163,7 @@ $$P(\text{collision}) \approx 1 - \exp\left(-\frac{N^2}{2S}\right)$$
 | **7** | $3.52 \times 10^{12}$ | $1,000,000$ | $1.3 \times 10^{-1}$ (~13.2%) | Handled cleanly by $\le 5$ retry loop |
 | **8** | $2.18 \times 10^{14}$ | $1,000,000$ | $2.3 \times 10^{-3}$ (~0.23%) | Virtually collision-free |
 
-In our implementation, [`URLShortenerService`](file:///C:/Devfield/leet_project/Proj_03/src/service.py#L93-L108) utilizes a default length of 7 with an automatic 5-attempt retry loop, yielding a near-zero failure rate even under high dataset density.
+In our implementation, [`URLShortenerService`](./src/service.py) utilizes a default length of 7 with an automatic 5-attempt retry loop, yielding a near-zero failure rate even under high dataset density.
 
 ---
 
@@ -190,16 +190,16 @@ python -m pytest Proj_03/tests/ -v
 
 ### Key Test Categories
 
-1. **Routing & HTTP Response Contracts** ([`test_flask_api_routes.py`](file:///C:/Devfield/leet_project/Proj_03/tests/test_flask_api_routes.py)):
+1. **Routing & HTTP Response Contracts** ([`test_flask_api_routes.py`](./tests/test_flask_api_routes.py)):
    - Verifies 201 Created, 302 Redirect with exact `Location` headers, 400 Bad URL validation, 409 duplicate custom code conflict, 403 authorization protection on deletion, and 200 aggregate stats payloads.
-2. **Concurrency & Thread Safety** ([`test_shortener_concurrency.py`](file:///C:/Devfield/leet_project/Proj_03/tests/test_shortener_concurrency.py)):
+2. **Concurrency & Thread Safety** ([`test_shortener_concurrency.py`](./tests/test_shortener_concurrency.py)):
    - 50 threads concurrently redirecting through the same link: asserts zero lost updates with exact final `hit_count == 50`.
    - 20 threads simultaneously claiming identical custom code: asserts exactly 1 winner (201 Created) and 19 conflicts (409 Conflict).
    - 30 threads auto-generating links: asserts 30 distinct, non-colliding short codes.
-3. **Lifecycle & Expiration Mechanics** ([`test_shortener_service_lifecycle.py`](file:///C:/Devfield/leet_project/Proj_03/tests/test_shortener_service_lifecycle.py)):
+3. **Lifecycle & Expiration Mechanics** ([`test_shortener_service_lifecycle.py`](./tests/test_shortener_service_lifecycle.py)):
    - Time travel testing for TTL expiration (`410 Gone`).
    - Soft deletion guarantees and aggregate statistics verification.
-4. **Validation & Entropy Stress** ([`test_url_validation_and_generation.py`](file:///C:/Devfield/leet_project/Proj_03/tests/test_url_validation_and_generation.py)):
+4. **Validation & Entropy Stress** ([`test_url_validation_and_generation.py`](./tests/test_url_validation_and_generation.py)):
    - Length limits ($\le 2048$), scheme checks, malformed syntax.
    - Custom alias regex (`^[a-zA-Z0-9_-]{3,30}$`) and reserved keyword collision rejection.
    - Retry exhaustion simulation when database is artificially saturated.

@@ -200,22 +200,22 @@ python -m pytest Proj_09/tests/ -v
 
 ### Test Suite Directory Structure
 
-- [`test_risk_type_validation_and_boolean_trap.py`](file:///C:/Devfield/leet_project/Proj_09/tests/test_risk_type_validation_and_boolean_trap.py):
+- [`test_risk_type_validation_and_boolean_trap.py`](./tests/test_risk_type_validation_and_boolean_trap.py):
   - Proves `True` and `False` are rejected when passed as rating, purchase value, or account age.
   - Verifies rejection of NaNs, positive/negative infinities, and string numbers (`"5.0"`).
   - Verifies float account ages (`30.5`) and negative values are rejected.
-- [`test_risk_component_scoring_and_boundaries.py`](file:///C:/Devfield/leet_project/Proj_09/tests/test_risk_component_scoring_and_boundaries.py):
+- [`test_risk_component_scoring_and_boundaries.py`](./tests/test_risk_component_scoring_and_boundaries.py):
   - Validates exact boundary pairs across all tiers ($4.5$ vs $4.49$, $\$50$ vs $\$49.99$, $365$ vs $364\text{ days}$).
-- [`test_risk_decision_thresholds.py`](file:///C:/Devfield/leet_project/Proj_09/tests/test_risk_decision_thresholds.py):
+- [`test_risk_decision_thresholds.py`](./tests/test_risk_decision_thresholds.py):
   - Verifies absolute minimum score ($5.0$) and maximum score ($100.0$).
   - Validates boundary transitions at exactly $30.0$ (`MEDIUM_RISK`) and $70.0$ (`HIGH_RISK`).
   - Verifies custom threshold initializations and constructor validation.
-- [`test_risk_batch_error_isolation.py`](file:///C:/Devfield/leet_project/Proj_09/tests/test_risk_batch_error_isolation.py):
+- [`test_risk_batch_error_isolation.py`](./tests/test_risk_batch_error_isolation.py):
   - Verifies heterogeneous batches isolate invalid items without aborting execution.
   - Verifies single-pass lazy generator streaming.
-- [`test_risk_stateless_and_data_isolation.py`](file:///C:/Devfield/leet_project/Proj_09/tests/test_risk_stateless_and_data_isolation.py):
+- [`test_risk_stateless_and_data_isolation.py`](./tests/test_risk_stateless_and_data_isolation.py):
   - Verifies idempotency, frozen dataclass immutability, and caller mutation isolation.
-- [`test_risk_concurrency.py`](file:///C:/Devfield/leet_project/Proj_09/tests/test_risk_concurrency.py):
+- [`test_risk_concurrency.py`](./tests/test_risk_concurrency.py):
   - 50 concurrent worker threads assessing risk simultaneously with 100% thread safety.
 
 ---
