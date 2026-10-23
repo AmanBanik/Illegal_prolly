@@ -169,17 +169,48 @@ The composite score $\mathcal{R} \in [5.0, 100.0]$ is calculated across three or
 Let the input vector be $\mathbf{x} = (r, v, a) \in [0, 5] \times [0, \infty) \times \mathbb{N}_0$.
 The component scoring functions are step-wise piecewise definitions:
 
-$$S_{\text{rating}}(r) = \begin{cases} 0 & \text{if } r \ge 4.5 \\ 10 & \text{if } 3.5 \le r < 4.5 \\ 25 & \text{if } 2.5 \le r < 3.5 \\ 40 & \text{if } r < 2.5 \end{cases}$$
+$$
+S_{\text{rating}}(r) = \begin{cases}
+0 & \text{if } r \ge 4.5 \\
+10 & \text{if } 3.5 \le r < 4.5 \\
+25 & \text{if } 2.5 \le r < 3.5 \\
+40 & \text{if } r < 2.5
+\end{cases}
+$$
 
-$$S_{\text{value}}(v) = \begin{cases} 5 & \text{if } v < 50 \\ 15 & \text{if } 50 \le v < 200 \\ 25 & \text{if } 200 \le v < 1000 \\ 35 & \text{if } v \ge 1000 \end{cases}$$
+$$
+S_{\text{value}}(v) = \begin{cases}
+5 & \text{if } v < 50 \\
+15 & \text{if } 50 \le v < 200 \\
+25 & \text{if } 200 \le v < 1000 \\
+35 & \text{if } v \ge 1000
+\end{cases}
+$$
 
-$$S_{\text{age}}(a) = \begin{cases} 0 & \text{if } a \ge 365 \\ 5 & \text{if } 90 \le a < 365 \\ 15 & \text{if } 30 \le a < 90 \\ 25 & \text{if } a < 30 \end{cases}$$
+$$
+S_{\text{age}}(a) = \begin{cases}
+0 & \text{if } a \ge 365 \\
+5 & \text{if } 90 \le a < 365 \\
+15 & \text{if } 30 \le a < 90 \\
+25 & \text{if } a < 30
+\end{cases}
+$$
 
 The total risk score $\mathcal{R}(\mathbf{x})$ is the bounded sum:
-$$\mathcal{R}(\mathbf{x}) = \min(100.0, \max(0.0, S_{\text{rating}}(r) + S_{\text{value}}(v) + S_{\text{age}}(a)))$$
+
+$$
+\mathcal{R}(\mathbf{x}) = \min(100.0, \max(0.0, S_{\text{rating}}(r) + S_{\text{value}}(v) + S_{\text{age}}(a)))
+$$
 
 Given decision thresholds $\theta_{\text{low}} = 30.0$ and $\theta_{\text{high}} = 70.0$, the decision classifier $\mathcal{D}(\mathcal{R})$ is:
-$$\mathcal{D}(\mathcal{R}) = \begin{cases} \text{LOW\_RISK} & \text{if } \mathcal{R} < \theta_{\text{low}} \\ \text{MEDIUM\_RISK} & \text{if } \theta_{\text{low}} \le \mathcal{R} < \theta_{\text{high}} \\ \text{HIGH\_RISK} & \text{if } \mathcal{R} \ge \theta_{\text{high}} \end{cases}$$
+
+$$
+\mathcal{D}(\mathcal{R}) = \begin{cases}
+\text{LOW-RISK} & \text{if } \mathcal{R} < \theta_{\text{low}} \\
+\text{MEDIUM-RISK} & \text{if } \theta_{\text{low}} \le \mathcal{R} < \theta_{\text{high}} \\
+\text{HIGH-RISK} & \text{if } \mathcal{R} \ge \theta_{\text{high}}
+\end{cases}
+$$
 
 ### 4.2 Time & Space Complexity
 

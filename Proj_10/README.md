@@ -159,11 +159,21 @@ user_mallory ─────── edit_comment(#42, "malicious") ────�
 ### 4.1 State Transition Formulation
 
 Let $S_u(t) \in \mathbb{N}_0$ represent the strike count of user $u$ at time $t$, and $B_u(t) \in \{0, 1\}$ represent their blocking status.
-Given strike threshold $\theta = \text{max\_strikes}$:
+Given strike threshold $\theta = \theta_{\text{threshold}}$ (where $\theta_{\text{threshold}} = \text{max-strikes}$):
 
-$$S_u(t+1) = \begin{cases} S_u(t) + 1 & \text{if moderation fails} \\ S_u(t) & \text{if moderation succeeds or checker crashes} \end{cases}$$
+$$
+S_u(t+1) = \begin{cases}
+S_u(t) + 1 & \text{if moderation fails} \\
+S_u(t) & \text{if moderation succeeds or checker crashes}
+\end{cases}
+$$
 
-$$B_u(t+1) = \begin{cases} 1 & \text{if } S_u(t+1) \ge \theta \\ B_u(t) & \text{otherwise} \end{cases}$$
+$$
+B_u(t+1) = \begin{cases}
+1 & \text{if } S_u(t+1) \ge \theta \\
+B_u(t) & \text{otherwise}
+\end{cases}
+$$
 
 ### 4.2 Time & Space Complexity
 

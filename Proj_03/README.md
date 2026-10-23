@@ -146,15 +146,24 @@ Link Created              Redirect Valid            Link Expired              Ow
 ### 4.1 Base62 Combinatorial Space
 
 When auto-generating short-codes, we draw characters from the alphanumeric Base62 alphabet:
-$$\Sigma = \{0\dots 9, a\dots z, A\dots Z\}, \quad |\Sigma| = 62$$
+
+$$
+\Sigma = \{0\dots 9, a\dots z, A\dots Z\}, \quad |\Sigma| = 62
+$$
 
 For a code of length $L = 7$:
-$$\text{Total Unique Codes} = 62^7 = 3,521,614,606,208 \approx 3.52 \times 10^{12} \text{ combinations}$$
+
+$$
+\text{Total Unique Codes} = 62^7 = 3,521,614,606,208 \approx 3.52 \times 10^{12} \text{ combinations}
+$$
 
 ### 4.2 Birthday Paradox & Collision Probability
 
 The probability $P$ of at least one collision after generating $N$ independent uniform random codes in a space of size $S = 62^L$ is approximated by:
-$$P(\text{collision}) \approx 1 - \exp\left(-\frac{N^2}{2S}\right)$$
+
+$$
+P(\text{collision}) \approx 1 - \exp\left(-\frac{N^2}{2S}\right)
+$$
 
 | Short Code Length ($L$) | Total Capacity ($S = 62^L$) | Generated Codes ($N$) | Collision Probability ($P$) | Practical Implication |
 |:---:|:---:|:---:|:---:|---|

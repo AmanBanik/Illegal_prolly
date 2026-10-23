@@ -93,8 +93,14 @@ Imagine a physical bucket holding tokens:
 #### The Coding Trick: "Lazy Refill"
 You **never** run a background loop or timer thread adding tokens every second—that destroys CPU performance. 
 Instead, when a request arrives, you calculate how many tokens accumulated since the last request:
-$$\text{newTokens} = (\text{currentTime} - \text{lastRefillTime}) \times \text{refillRate}$$
-$$\text{tokens} = \min(\text{capacity}, \text{tokens} + \text{newTokens})$$
+
+$$
+\text{newTokens} = (\text{currentTime} - \text{lastRefillTime}) \times \text{refillRate}
+$$
+
+$$
+\text{tokens} = \min(\text{capacity}, \text{tokens} + \text{newTokens})
+$$
 
 #### Step-by-Step Execution Trace
 > **Rule:** Capacity = **3 tokens**, Refill Rate = **1 token/sec**. Starts full with 3 tokens.
@@ -149,12 +155,36 @@ $$\text{tokens} = \min(\text{capacity}, \text{tokens} + \text{newTokens})$$
 
 ---
 
-## 7. Verification & Testing
+## 7. Verification & Automated Test Suite
 
-Execute the full suite of unit and multi-threaded stress tests:
+Project 01 is validated by **12 automated pytest test cases** spanning algorithm logic, boundary conditions, recovery time calculation, multi-tenant state isolation, defensive copy snapshot protection, and high-contention multi-threaded concurrency:
 
 ```bash
-python -m pytest Proj_01/tests -v
+# Execute Proj_01 test suite (12 passing tests)
+python -m pytest Proj_01/tests/ -v
+
+# Execute entire repository test suite (207 passing tests)
+python -m pytest -v
 ```
 
-Expected output: 12 tests passed covering boundary cases, burst refills, multi-tenant isolation, and concurrent contention.
+### Test Suite Directory Breakdown
+
+- [`test_limiter.py`](./tests/test_limiter.py):
+  - **Multi-Tenant State Isolation:** Verifies that requests for `tenant_A` and `tenant_B` on different resources are tracked independently with zero cross-tenant quota leakage.
+  - **Global Statistics Tracking:** Verifies accurate aggregation of allowed, blocked, and total requests across tenants.
+  - **Defensive Copy Protection:** Proves that mutating the dictionary returned by `get_stats()` does not corrupt internal monitoring state.
+
+- [`test_rate_limiter_concurrency.py`](./tests/test_rate_limiter_concurrency.py):
+  - **Concurrent Sliding Window Capacity:** 30 worker threads simultaneously requesting tokens against a window capacity of 10; asserts exactly 10 requests allowed, 20 rejected with zero race conditions.
+  - **Concurrent Multi-Tenant Isolation:** Parallel worker threads hitting `tenant_A` and `tenant_B` concurrently, verifying that per-strategy lock granularity prevents cross-tenant thread contention.
+
+- [`test_sliding_window.py`](./tests/test_sliding_window.py):
+  - **Admission & Boundary Rejection:** Verifies FIFO event log trimming and rejection once capacity is exhausted.
+  - **Expiration & Recovery Calculation:** Verifies that expired timestamps slide out of the window, correctly restoring capacity and computing exact `retry_after` backoff intervals.
+  - **Oversized Token Rejections:** Asserts that single requests requesting more tokens than the total window capacity are rejected immediately.
+  - **Input Validation:** Proves non-positive or invalid token amounts are rejected with `ValueError`.
+
+- [`test_token_bucket.py`](./tests/test_token_bucket.py):
+  - **Burst Consumption & Refill:** Validates instantaneous burst consumption down to 0 and continuous time-based fractional token replenishment.
+  - **Capacity Ceiling Enforcement:** Proves idle token buckets cap accumulation cleanly at maximum capacity without token leakage.
+  - **Oversized Request Rejection:** Validates rejection of requests exceeding bucket capacity with precise recovery duration calculations.

@@ -119,7 +119,7 @@ Let the feature flag state at discrete time $t$ be represented as:
 
 $$\mathcal{S}_t = \langle \mathcal{F}_t, \mathcal{U}_t, \mathcal{H} \rangle$$
 
-Where $\mathcal{F}_t: \text{Key} \to \text{FeatureFlag}$ is the registry of active flag specifications, and $\mathcal{U}_t$ is the user context domain $\mathbf{u} = \langle \text{user\_id}, \mathbf{attr} \rangle$.
+Where $\mathcal{F}_t: \text{Key} \to \text{FeatureFlag}$ is the registry of active flag specifications, and $\mathcal{U}_t$ is the user context domain $\mathbf{u} = \langle \text{user-id}, \mathbf{attr} \rangle$.
 
 ### 3.1 Rule Evaluation Boolean Algebra
 Each targeting rule $R_i$ contains $m_i$ atomic predicates:
@@ -135,9 +135,9 @@ If no rule satisfies the predicate vector ($\forall i, \, \mathcal{R}_i(\mathbf{
 ### 3.2 Deterministic SHA-256 Uniform Hashing
 To guarantee reproducible evaluation across any number of server instances without database lookups, the hash bucket $\mathcal{B}(k, u) \in [0.00, 100.00)$ is calculated as:
 
-$$\text{hash\_input} = k \mathbin{\Vert} \text{":"} \mathbin{\Vert} u$$
+$$\text{hash-input} = k \mathbin{\Vert} \text{":"} \mathbin{\Vert} u$$
 
-$$\mathcal{H} = \text{SHA256}(\text{hash\_input})$$
+$$\mathcal{H} = \text{SHA256}(\text{hash-input})$$
 
 $$\text{IntegerDigest} = \sum_{i=0}^{7} \mathcal{H}[i] \times 16^{7-i} \quad (\text{First 32 bits})$$
 

@@ -161,12 +161,44 @@ To prevent `TypeError: can't compare offset-naive and offset-aware datetimes` an
 
 ---
 
-## 7. Verification & Testing
+## 7. Verification & Automated Test Suite
 
-Execute the full suite of unit, security, and multi-threaded race condition tests:
+Project 15 is validated by **21 automated pytest test cases** spanning configuration loading, datetime normalization, exact window expiration boundaries, replay attack prevention, and concurrent single-use code consumption:
 
 ```bash
-python -m pytest Proj_15/tests -v
+# Execute Proj_15 test suite (21 passing tests)
+python -m pytest Proj_15/tests/ -v
+
+# Execute entire repository test suite (207 passing tests)
+python -m pytest -v
 ```
 
-Expected output: 21 tests passed covering configuration loading, datetime normalization, exact window thresholds, replay attack defense, and concurrent consumption locks.
+### Test Suite Directory Breakdown
+
+- [`test_config.py`](./tests/test_config.py):
+  - **Default Configuration:** Verifies factory default parameters (30-second window, PBKDF2 iterations, attempt limits).
+  - **Environment Variable Overrides:** Asserts custom overrides via environment variables are parsed correctly.
+  - **Validation & Bad Types:** Ensures negative durations, non-numeric strings, and invalid configurations raise `ConfigurationError`.
+  - **Configuration Immutability:** Proves frozen configuration dataclasses cannot be modified at runtime.
+
+- [`test_datetime_and_url.py`](./tests/test_datetime_and_url.py):
+  - **Aware UTC Datetime Handling:** Verifies timezone-aware UTC timestamps are preserved with microsecond precision.
+  - **Legacy Naive Datetime Normalization:** Proves naive datetimes are safely normalized to UTC without raising Python timezone comparison exceptions.
+  - **Non-UTC Offset Conversion:** Validates offset datetimes (EST, PST, IST) are properly converted to absolute UTC instants.
+  - **URL Generation:** Tests secure reset link construction, verifying scheme, domain formatting, and query parameters.
+  - **Entropy & Format:** Verifies 6-digit numeric codes adhere to `^[0-9]{6}$` with high entropy across repeated generations.
+  - **Password Hashing:** Tests PBKDF2 hashing with unique salts and constant-time password verification.
+
+- [`test_lifecycle_and_security.py`](./tests/test_lifecycle_and_security.py):
+  - **End-to-End Happy Path:** Validates code request, URL dispatch, token validation, and password reset completion.
+  - **Exact 30-Second Boundary:** Proves codes are accepted at $t = 29.99\text{s}$ and strictly rejected at $t = 30.01\text{s}$.
+  - **Replay Attack Prevention:** Asserts single-use token consumption; immediate second attempt with identical code fails.
+  - **Previous Code Revocation:** Proves issuing a new code immediately revokes all prior active codes for that user.
+  - **User State Isolation:** Proves User A's valid reset code cannot be used to reset User B's password.
+  - **Weak Password Validation:** Enforces password strength rules, rejecting empty, short, or overly simplistic passwords.
+  - **Non-Existent Users:** Validates that querying unknown user IDs raises clean domain exceptions without data leaks.
+
+- [`test_password_reset_concurrency.py`](./tests/test_password_reset_concurrency.py):
+  - **Concurrent Single-Winner Consumption:** 20 worker threads simultaneously submitting the same valid code; asserts exactly 1 winner succeeds (HTTP 200) and 19 callers are rejected.
+  - **Concurrent Multi-User Workflows:** Parallel password reset workflows executing across independent users with zero cross-talk.
+  - **Storage Snapshot Isolation:** Verifies user entities returned from storage repositories are decoupled snapshots resistant to caller mutation.

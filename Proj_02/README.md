@@ -35,7 +35,10 @@ Post ──> Comment (Level 1) ──> Reply (Level 2 [Terminal Leaf])
 ```
 
 The **Comments & Replies Discussion Service** implements an enterprise-grade, in-memory, thread-safe discussion engine strictly constrained to a **two-level discussion topology**:
-$$\text{Post} \longrightarrow \text{Comment} \longrightarrow \text{Reply}$$
+
+$$
+\text{Post} \longrightarrow \text{Comment} \longrightarrow \text{Reply}
+$$
 
 ### Core Requirements
 1. **Adding Comments:** Comments belong to a post (`post_id`). Each comment receives an auto-incrementing ID.
@@ -139,32 +142,58 @@ Where:
 ### 3.1 Independent Sequence Invariant
 Comment ID generation and reply ID generation operate on completely disjoint sequence registers:
 
-$$\text{id}_{\text{comment}} = \sigma_C, \quad \sigma_C \leftarrow \sigma_C + 1$$
-$$\text{id}_{\text{reply}} = \sigma_R, \quad \sigma_R \leftarrow \sigma_R + 1$$
+$$
+\text{id}_{\text{comment}} = \sigma_C, \quad \sigma_C \leftarrow \sigma_C + 1
+$$
 
-$$\frac{\partial \sigma_C}{\partial (\text{add\_reply})} = 0, \quad \frac{\partial \sigma_R}{\partial (\text{add\_comment})} = 0$$
+$$
+\text{id}_{\text{reply}} = \sigma_R, \quad \sigma_R \leftarrow \sigma_R + 1
+$$
+
+$$
+\frac{\partial \sigma_C}{\partial (\text{add-reply})} = 0, \quad \frac{\partial \sigma_R}{\partial (\text{add-comment})} = 0
+$$
 
 ### 3.2 Two-Level Tree Depth Bound
 Let $G = (V, E)$ be the discussion directed acyclic graph where root nodes are posts:
 
-$$\forall v \in V, \quad \text{depth}(v) \le 2$$
-$$\text{depth}(v) = \begin{cases} 0 & \text{if } v \in \text{Posts} \\ 1 & \text{if } v \in \text{Comments} \\ 2 & \text{if } v \in \text{Replies} \end{cases}$$
+$$
+\forall v \in V, \quad \text{depth}(v) \le 2
+$$
 
-$$\forall r \in \text{Replies}, \quad \text{deg}^+(r) = 0 \quad (\text{out-degree is strictly zero})$$
+$$
+\text{depth}(v) = \begin{cases}
+0 & \text{if } v \in \text{Posts} \\
+1 & \text{if } v \in \text{Comments} \\
+2 & \text{if } v \in \text{Replies}
+\end{cases}
+$$
 
-$$\text{If } \exists \, \text{edge } (r, u) \text{ where } r \in \text{Replies} \implies \text{VIOLATION} \to \text{Raise } \text{InvalidHierarchyError}$$
+$$
+\forall r \in \text{Replies}, \quad \text{deg}^+(r) = 0 \quad (\text{out-degree is strictly zero})
+$$
+
+$$
+\text{If } \exists \, \text{edge } (r, u) \text{ where } r \in \text{Replies} \implies \text{VIOLATION} \to \text{Raise } \text{InvalidHierarchyError}
+$$
 
 ### 3.3 State Isolation Invariant
 For any two distinct post identifiers $p_i, p_j$:
 
-$$p_i \ne p_j \implies \mathcal{P}_t[p_i] \cap \mathcal{P}_t[p_j] = \emptyset$$
+$$
+p_i \ne p_j \implies \mathcal{P}_t[p_i] \cap \mathcal{P}_t[p_j] = \emptyset
+$$
 
 ### 3.4 Snapshot Defensive Copy Non-Interference
 Let $\text{snap} = \text{deepcopy}(\mathcal{C}_t[k])$ be a retrieved snapshot. For any external mutation operator $\mathcal{M}$:
 
-$$\mathcal{M}(\text{snap}) \implies \mathcal{C}_t[k] \equiv \mathcal{C}_t[k]_{(\text{pre-mutation})}$$
+$$
+\mathcal{M}(\text{snap}) \implies \mathcal{C}_t[k] \equiv \mathcal{C}_t[k]_{(\text{pre-mutation})}
+$$
 
-$$\Delta(\text{snap}) \not\to \Delta(\mathcal{S}_t)$$
+$$
+\Delta(\text{snap}) \not\to \Delta(\mathcal{S}_t)
+$$
 
 ---
 

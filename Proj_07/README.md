@@ -163,12 +163,41 @@ blur_transform = CallableTransform("gaussian_blur", pillow_blur_filter)
 
 ---
 
-## 7. Verification & Testing
+## 7. Verification & Automated Test Suite
 
-Execute the complete suite of functional, concurrency, and memory budget tests:
+PixelFlow is validated by **17 automated pytest test cases** spanning image transformation correctness, atomic memory budget management, condition-variable thread coordination, bounded backpressure streaming, failure isolation, and deterministic result reordering:
 
 ```bash
-python -m pytest Proj_07/tests -v
+# Execute Proj_07 test suite (17 passing tests)
+python -m pytest Proj_07/tests/ -v
+
+# Execute entire repository test suite (207 passing tests)
+python -m pytest -v
 ```
 
-Expected output: 17 tests passed covering transform chains, memory ceiling enforcement, deterministic reordering, failure isolation, and lazy streaming.
+### Test Suite Directory Breakdown
+
+- [`test_image_transforms.py`](./tests/test_image_transforms.py):
+  - **Grayscale Transformation:** Validates byte conversion and metadata tracking (`color_space="grayscale"`, `transforms_applied`).
+  - **Downscaling & Resizing:** Validates dimension scaling to $32 \times 32$ and payload byte truncation.
+  - **Watermark Injection:** Validates binary watermark payload injection and metadata annotation.
+  - **Pluggable Callable Transforms:** Proves arbitrary functional callables (e.g., custom byte inversion) integrate seamlessly.
+  - **Transform Error Handling:** Verifies unhandled callable errors are intercepted and wrapped into domain `TransformError`.
+  - **Ordered Pipeline Chaining:** Validates immutable multi-stage transform pipelines ($T_1 \to T_2 \to T_3$) preserving execution order in metadata.
+
+- [`test_memory_budget_manager.py`](./tests/test_memory_budget_manager.py):
+  - **Atomic Acquire & Release:** Validates atomic budget allocation and replenishment across sequential requests.
+  - **Oversized Request Rejection:** Proves allocations exceeding total capacity fail fast with `MemoryBudgetExceededError` instead of deadlocking.
+  - **Thread Synchronization & Blocking:** Proves thread coordination via `threading.Condition`, where a thread blocks when budget is exhausted and wakes automatically upon memory release.
+  - **High-Water Mark Tracking:** Asserts accurate peak memory tracking retained after memory deallocation.
+
+- [`test_pipeline_concurrency.py`](./tests/test_pipeline_concurrency.py):
+  - **Strict Memory Ceiling Under Load:** 15 concurrent jobs across 6 worker threads with a 150 KB budget (at most 3 jobs in flight simultaneously); proves peak memory never exceeds budget and returns cleanly to 0 bytes.
+  - **Bounded Backpressure & Lazy Iteration:** Consumes only 3 items from an infinite generator; proves producer read-ahead is strictly bounded by semaphore without runaway memory consumption.
+  - **Context Manager Lifecycle:** Asserts deterministic thread pool termination and resource cleanup via `with PixelFlowPipeline(...)` context manager.
+
+- [`test_pipeline_ordering_and_isolation.py`](./tests/test_pipeline_ordering_and_isolation.py):
+  - **Deterministic Output Reordering:** Simulates heavy latency on Job 0 (80ms) vs lightweight Jobs 1–7 (10ms); proves results yield strictly in original FIFO sequence `[job_0, job_1, ..., job_7]`.
+  - **Failure Isolation:** Injects an unhandled exception in Job 2; asserts Job 2 is isolated as `success = False` with full error diagnostic while sibling jobs complete unaffected.
+  - **Oversized Payload Isolation:** Proves an image exceeding the total memory budget is intercepted and yielded as a failed result without deadlocking the queue.
+  - **Empty Batch Handling:** Confirms graceful handling and empty generator yield for empty input batches.

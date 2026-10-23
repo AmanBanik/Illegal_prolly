@@ -169,19 +169,37 @@ Watchlists are private to their creator. Operations from foreign users are rejec
 ### 4.1 Composite Set Uniqueness
 
 Let $\mathcal{W}$ be the set of watchlists and $\mathcal{M}$ be the universe of movies. The membership relation is defined as:
-$$\mathcal{R} \subseteq \mathcal{W} \times \mathcal{M}$$
+
+$$
+\mathcal{R} \subseteq \mathcal{W} \times \mathcal{M}
+$$
 
 For any watchlist $w \in \mathcal{W}$, its movie set is given by:
-$$M(w) = \{ m \in \mathcal{M} \mid (w, m) \in \mathcal{R} \}$$
+
+$$
+M(w) = \{ m \in \mathcal{M} \mid (w, m) \in \mathcal{R} \}
+$$
 
 The database constraint guarantees that:
-$$\forall (w, m) \in \mathcal{R}, \quad \text{count}(w, m) = 1$$
+
+$$
+\forall (w, m) \in \mathcal{R}, \quad \text{count}(w, m) = 1
+$$
 
 Therefore, adding movie $m$ to watchlist $w$ is defined by the transition:
-$$M'(w) = \begin{cases} M(w) \cup \{m\} & \text{if } m \notin M(w) \\ \text{Error}(409\text{ Conflict}) & \text{if } m \in M(w) \end{cases}$$
+
+$$
+M'(w) = \begin{cases}
+M(w) \cup \{m\} & \text{if } m \notin M(w) \\
+\text{Error}(409\text{ Conflict}) & \text{if } m \in M(w)
+\end{cases}
+$$
 
 And removing movie $m$ from watchlist $w_1$ satisfies the strict independence condition:
-$$M'(w_1) = M(w_1) \setminus \{m\}, \quad \text{while } \forall w_2 \ne w_1, \quad M'(w_2) = M(w_2)$$
+
+$$
+M'(w_1) = M(w_1) \setminus \{m\}, \quad \text{while } \forall w_2 \ne w_1, \quad M'(w_2) = M(w_2)
+$$
 
 ### 4.2 Time & Space Complexity
 
