@@ -1,10 +1,12 @@
 """Application service layer for IssueHub Retry-Safe Issue Service."""
 
+from __future__ import annotations
+
 import hashlib
 import json
 import uuid
 from datetime import datetime, timezone
-from typing import List, Optional, Set
+from typing import Any, List, Optional, Set
 
 from Proj_11.src.exceptions import (
     AuthorizationError,
